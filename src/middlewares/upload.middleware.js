@@ -17,7 +17,30 @@ import { fileURLToPath } from 'url';
  * 4. Set limits:
  *    - fileSize: 5MB (5 * 1024 * 1024)
  * 5. Export upload middleware
- *
+*/
+
+const fileFilter = (req, file, cb) => {
+     if (['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
+          cb(null, true);
+     } else {
+          cb(new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.'), false);
+     }
+};
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOAD_DIR = path.join(__dirname, '../../uploads');
+const storage = multer.diskStorage({
+     destination: (req, file, cb) => {
+          cb(null, UPLOAD_DIR);
+     },
+     filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(4).toString('hex')
+          cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+     }
+})
+
+export const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } })
+/*
  * Example structure:
  * const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * const UPLOAD_DIR = path.join(__dirname, '../../uploads');

@@ -21,6 +21,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export async function uploadImage(req, res, next) {
   try {
     // Your code here
+    if (!req.file) return res.status(400).json({ error: { message: "No file uploaded" } });
+    const { filename, originalname, mimetype, size, path } = req.file;
+    const { width, height } = await getImageDimensions(path);
+    const thumbnailFilename = await generateThumbnail(filename);
+    let { description, tags } = req.body;
+    tags = tags ? tags.split(',').map(ele => ele.trim()) : [];
+    const createdImage = await Image.create({ originalName: originalname, filename, mimetype, size, width, height, thumbnailFilename, description, tags });
+    return res.status(201).json(createdImage)
+
   } catch (error) {
     next(error);
   }

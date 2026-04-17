@@ -36,6 +36,18 @@ const THUMBNAILS_DIR = path.join(__dirname, '../../uploads/thumbnails');
  */
 export async function generateThumbnail(filename) {
   // Your code here
+  const inputPath = path.join(__dirname, '../../uploads', filename);
+  const thumbnailName = `thumb-${filename.replace(/\.\w+$/, '.jpg')}`;
+  const outputPath = path.join(THUMBNAILS_DIR, thumbnailName);
+
+  // Generate thumbnail to buffer first
+  const thumbnailBuffer = await sharp(inputPath)
+    .resize({ width: 200, height: 200, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 80 })
+    .withMetadata(false) // removes metadata to keep size tiny
+    .toFile(outputPath);
+
+  return thumbnailName;
 }
 
 /**
@@ -59,4 +71,6 @@ export async function generateThumbnail(filename) {
  */
 export async function getImageDimensions(filepath) {
   // Your code here
+  const { height, width } = await sharp(filepath).metadata();
+  return { height, width };
 }
