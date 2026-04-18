@@ -119,7 +119,9 @@ export async function listImages(req, res, next) {
  */
 export async function getImage(req, res, next) {
   try {
-    // Your code here
+    const image = await Image.findById(req.params.id);
+    if (!image) return res.status(404).json({ error: { message: "Image not found" } });
+    return res.status(200).json(image);
   } catch (error) {
     next(error);
   }
@@ -140,7 +142,15 @@ export async function getImage(req, res, next) {
  */
 export async function downloadImage(req, res, next) {
   try {
-    // Your code here
+    const fetchedImage = await Image.findById(req.params.id);
+    if (!fetchedImage) return res.status(404).json({ error: { message: `Image not found` } });
+    const filepath = path.join(__dirname, '../../uploads/', fetchedImage.filename);
+    if (!fs.existsSync(filepath)) return res.status(404).json({ error: { message: `File not found` } });
+    res.set({
+      "Content-Type": fetchedImage.mimetype,
+      "Content-Disposition": `attachment; filename="${fetchedImage.originalName}"`
+    })
+    return res.sendFile(filepath);
   } catch (error) {
     next(error);
   }
@@ -161,6 +171,16 @@ export async function downloadImage(req, res, next) {
 export async function downloadThumbnail(req, res, next) {
   try {
     // Your code here
+    const thumbnail = await Image.findById(req.params.id);
+    if (!thumbnail) return res.status(404).json({ error: { message: "Image not found" } });
+
+    const filepath = path.join(__dirname, '../../uploads/thumbnails', thumbnail.thumbnailFilename);
+    if (!fs.existsSync(filepath)) return res.status(404).json({ error: { message: "File not found" } });
+    res.set({
+      "Content-Type": 'image/jpeg',
+      "Content-Disposition": `attachment; filename="${thumbnail.originalName}"`
+    })
+    res.sendFile(filepath)
   } catch (error) {
     next(error);
   }
