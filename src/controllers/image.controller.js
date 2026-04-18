@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { link } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Image } from '../models/image.model.js';
@@ -78,7 +78,33 @@ export async function uploadImage(req, res, next) {
  */
 export async function listImages(req, res, next) {
   try {
-    // Your code here
+    const { search, mimetype, sortby, sortorder } = req.query;
+    /** * 2. Build MongoDB query:
+ *    - Add text search if search parameter provided
+ *    - Add mimetype filter if provided */
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    let query = {}
+    if (search) query = {
+      $or: [
+        { originalName: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ]
+    };
+    if (mimetype) query.mimetype = mimetype;
+
+    const [queryResult, totalCount] = await Promise.all([
+      Image.find(query).sort({ [sortby || 'uploadDate']: sortorder ? sortorder === 'asc' ? 1 : -1 : -1 }).limit(limit).skip(skip),
+      Image.countDocuments(query)
+    ]);
+    const pageCount = Math.ceil(totalCount / limit);
+
+    const totalSize = queryResult.reduce((init, ele) => init + ele.size, 0);
+
+    return res.status(200).json({ data: queryResult, meta: { total: totalCount, page, limit, pages: pageCount, totalSize } });
+
+
   } catch (error) {
     next(error);
   }
