@@ -198,7 +198,18 @@ export async function downloadThumbnail(req, res, next) {
  */
 export async function deleteImage(req, res, next) {
   try {
-    // Your code here
+    const image = await Image.findById(req.params.id);
+    if (!image) return res.status(404).json({ error: { message: "Image not found" } });
+    const filepathi = path.join(__dirname, '../../uploads/', image.filename);
+    const filepatht = path.join(__dirname, '../../uploads/thumbnails', image.thumbnailFilename);
+
+    try {
+      fs.unlinkSync(filepathi);
+      fs.unlinkSync(filepatht);
+
+    } catch (e) { }
+    await Image.findByIdAndDelete(req.params.id)
+    return res.status(204).send();
   } catch (error) {
     next(error);
   }
