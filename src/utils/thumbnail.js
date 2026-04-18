@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import fs from 'fs'
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const THUMBNAILS_DIR = path.join(__dirname, '../../uploads/thumbnails');
 
@@ -40,12 +40,23 @@ export async function generateThumbnail(filename) {
   const thumbnailName = `thumb-${filename.replace(/\.\w+$/, '.jpg')}`;
   const outputPath = path.join(THUMBNAILS_DIR, thumbnailName);
 
-  // Generate thumbnail to buffer first
-  const thumbnailBuffer = await sharp(inputPath)
-    .resize({ width: 200, height: 200, fit: 'inside', withoutEnlargement: true })
-    .jpeg({ quality: 80 })
-    .withMetadata(false) // removes metadata to keep size tiny
-    .toFile(outputPath);
+  const imageSize = fs.statSync(inputPath).size;
+  const processedimage = await sharp(inputPath)
+    .resize({
+      width: 200,
+      height: 200,
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .jpeg({ quality: 80 }).toBuffer();
+
+  //because we are facing problems with the size i need to check the original size < modifyed size or not before i send it to save
+  if (processedimage.length > imageSize) {
+    //discard modification directly save to memory
+    fs.copyFileSync(inputPath, outputPath)
+  } else {
+    await sharp(processedimage).toFile(outputPath);
+  }
 
   return thumbnailName;
 }

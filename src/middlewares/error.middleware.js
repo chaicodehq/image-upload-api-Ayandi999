@@ -23,7 +23,7 @@
 export function errorHandler(err, req, res, next) {
   // Your code here
   if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ error: { message: 'File size exceeds 5MB limit' } });
-  if (err?.message?.includes('Invalid file type')) return res.status(400).json({ error: { message: err.message } });
+  if (err?.message?.includes('Invalid file type')) return res.status(400).json({ error: { message: `invalid file type` } });
   if (err.name === 'ValidationError') return res.status(400).json({ error: { message: err.message } });
   if (err.code === 11000) return res.status(409).json({ error: { message: 'Resource already exists' } })
   return res.status(500).json({ error: { message: err.message || 'Internal server error' } })

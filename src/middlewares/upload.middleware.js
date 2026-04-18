@@ -23,7 +23,8 @@ const fileFilter = (req, file, cb) => {
      if (['image/jpeg', 'image/png', 'image/gif'].includes(file.mimetype)) {
           cb(null, true);
      } else {
-          cb(new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.'), false);
+          req.body.err = 'Invalid file type'
+          cb(null, false);
      }
 };
 
@@ -39,7 +40,11 @@ const storage = multer.diskStorage({
      }
 })
 
-export const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } })
+export const upload = multer({
+     storage,
+     fileFilter,
+     limits: { fileSize: 5 * 1024 * 1024 }
+})
 /*
  * Example structure:
  * const __dirname = path.dirname(fileURLToPath(import.meta.url));
